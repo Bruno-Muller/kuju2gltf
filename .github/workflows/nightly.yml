@@ -30,3 +30,17 @@ jobs:
           name: kuju2gltf-nightly-${{ github.run_number }}
           path: dist/kuju2gltf.exe
           retention-days: 7
+
+      - name: Create/Update nightly release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: nightly
+          name: Nightly Build
+          body: |
+            Latest nightly build - built on ${{ github.event.head_commit.timestamp }}
+            Commit: ${{ github.sha }}
+          artifacts: dist/kuju2gltf.exe
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
