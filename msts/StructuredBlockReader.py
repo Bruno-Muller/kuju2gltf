@@ -4,7 +4,7 @@
 
 from msts.TokenId import TokenId
 from pliskin.BinaryReader import BinaryReader
-from typing_extensions import Self
+from typing import Self
 import zlib
 from io import BytesIO
 

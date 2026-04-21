@@ -6,7 +6,7 @@ from msts.TokenId import TokenId
 from msts.StructuredBlockReader import BinaryBlockReader
 from msts.StructuredBlockReader import StructuredBlockReader
 import math
-from typing_extensions import Self
+from typing import Self
 from typing import List
 import copy as cp
 
