@@ -3,7 +3,7 @@
 # https://polyformproject.org/licenses/noncommercial/1.0.0
 
 from typing import overload
-from typing_extensions import Self
+from typing import Self
 import math
 
 class Vec3f:

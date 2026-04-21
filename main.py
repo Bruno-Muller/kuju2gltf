@@ -11,14 +11,16 @@ if __name__ == '__main__':
     # https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#_animation_channel_target_path
 
     # https://3d-train-studio.uk/concepts/
-    # sess notes, Optimisation on LOD and materials
+    # see notes, Optimisation on LOD and materials
 
-    DISCLAIMER = "This program is in alpha stage and provided as is for Pa94 personal use."
+    # Open Rails
+    # https://open-rails.readthedocs.io/en/unstable/developing.html#d-shape-files
 
     parser = argparse.ArgumentParser(
         prog='kuju2gltf',
         description='This program converts from Kuju\'s format Shape file \".s\" and associated Texture file \".ace\" to glTF format.',
-        epilog=DISCLAIMER)#'Pliskin - https://github.com/Bruno-Muller')
+        epilog="https://github.com/Bruno-Muller/kuju2gltf\n\nIt's-a-me, Mario!"
+    )
     
     parser.add_argument('input_file', help="Input, Kuju Shape file (.s)") 
     parser.add_argument('output_dir', help="Output, directory")
@@ -31,5 +33,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     extractor = ShapeExtractor(args.input_file, args.output_dir, args.format)
-    print(DISCLAIMER)
     extractor.run()

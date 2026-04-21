@@ -11,6 +11,8 @@ Free to use, modify, and distribute for non-commercial purposes only.
 
 ## Examples
 
+> kuju2gltf is a **command-line tool** (CLI).
+
 ### OpenRails
 ```bash
 kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format orts
