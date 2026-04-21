@@ -1,0 +1,32 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Every day at 02:00 UTC
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install pyinstaller
+
+      - name: Build executable
+        run: pyinstaller main.py --onefile --name kuju2gltf
+
+      - name: Upload nightly artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuju2gltf-nightly-${{ github.run_number }}
+          path: dist/kuju2gltf.exe
+          retention-days: 7
