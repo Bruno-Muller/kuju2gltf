@@ -57,3 +57,5 @@ If your shape is a Unicode text shape, convert it to binary first with `ffeditc_
 | `Bgr565` | ❌ | ❌ | Not Implemented |
 | `Bgra5551` | ❌ | ❌ | Not Implemented |
 | `Bgra4444` | ❌ | ❌ | Not Implemented |
+
+Note: PNG files are in 32-bit RGBA format (8 bits per channel, including alpha).
