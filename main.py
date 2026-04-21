@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='kuju2gltf',
         description='This program converts from Kuju\'s format Shape file \".s\" and associated Texture file \".ace\" to glTF format.',
-        epilog="https://github.com/Bruno-Muller/kuju2gltf\n\nIt's-a-me, Mario!"
+        epilog="It's-a-me, Mario! https://github.com/Bruno-Muller/kuju2gltf"
     )
     
     parser.add_argument('input_file', help="Input, Kuju Shape file (.s)") 

@@ -19,7 +19,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install pyinstaller
+        run: pip install pyinstaller Pillow
 
       - name: Build executable
         run: pyinstaller kuju2gltf.spec
