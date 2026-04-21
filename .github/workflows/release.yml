@@ -22,7 +22,7 @@ jobs:
         run: pip install pyinstaller
 
       - name: Build executable
-        run: pyinstaller kuju2gltf.spec --onefile
+        run: pyinstaller kuju2gltf.spec
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
