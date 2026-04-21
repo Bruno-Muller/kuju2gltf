@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Bruno Muller
 # https://polyformproject.org/licenses/noncommercial/1.0.0
 
-from typing_extensions import Self
+from typing import Self
 from io import BufferedReader
 from pliskin.BinaryReader import BinaryReader
 import zlib
