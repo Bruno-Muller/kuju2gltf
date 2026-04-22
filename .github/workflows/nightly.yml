@@ -1,8 +1,11 @@
 name: Nightly Build
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # Every day at 02:00 UTC
+  push:
+    branches:
+      - main
+  # schedule:
+  #   - cron: '0 2 * * *'  # Every day at 02:00 UTC
   workflow_dispatch:      # Allow manual trigger
 
 jobs:

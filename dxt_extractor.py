@@ -119,6 +119,10 @@ class DdsExtractor:
         width      = struct.unpack_from("<I", data, 16)[0]
         pf_flags   = struct.unpack_from("<I", data, 80)[0]
         pf_four_cc = data[84:88]
+        pf_r_mask  = struct.unpack_from("<I", data, 92)[0]
+        pf_g_mask  = struct.unpack_from("<I", data, 96)[0]
+        pf_b_mask  = struct.unpack_from("<I", data, 100)[0]
+        pf_a_mask  = struct.unpack_from("<I", data, 104)[0]
         pixel_data = data[128:]
 
         DDPF_FOURCC = 0x00000004
@@ -135,29 +139,56 @@ class DdsExtractor:
             else:
                 raise NotImplementedError(f"DDS FourCC {pf_four_cc!r} not supported for PNG conversion")
         else:
-            # ARGB: 32-bit little-endian packed pixels
-            colors = struct.unpack_from(f"<{width * height}I", pixel_data)
-            buf = bytearray(4 * width * height)
-            for idx, color in enumerate(colors):
-                i = idx * 4
-                buf[i+0] = (color >>  0) & 0xFF  # R
-                buf[i+1] = (color >>  8) & 0xFF  # G
-                buf[i+2] = (color >> 16) & 0xFF  # B
-                buf[i+3] = (color >> 24) & 0xFF  # A
-            return Image.frombuffer("RGBA", (width, height), bytes(buf))
+            buffer = DxtExtractor.extract_uncompressed(pixel_data, width, height, pf_r_mask, pf_g_mask, pf_b_mask, pf_a_mask)
+            return Image.frombuffer("RGBA", (width, height), buffer)
 
 
 class DxtExtractor:
+
+    @staticmethod
+    def extract_uncompressed(data: bytes, width: int, height: int, r_mask: int, g_mask: int, b_mask: int, a_mask: int) -> bytes:
+        def _mask_shift(mask: int) -> int:
+            if mask == 0:
+                return 0
+            shift = 0
+            while not (mask & 1):
+                mask >>= 1
+                shift += 1
+            return shift
+
+        r_shift = _mask_shift(r_mask)
+        g_shift = _mask_shift(g_mask)
+        b_shift = _mask_shift(b_mask)
+        a_shift = _mask_shift(a_mask)
+
+        colors = struct.unpack_from(f"<{width * height}I", data)
+        buf = bytearray(4 * width * height)
+        for idx, color in enumerate(colors):
+            i = idx * 4
+            buf[i+0] = (color >> r_shift) & 0xFF
+            buf[i+1] = (color >> g_shift) & 0xFF
+            buf[i+2] = (color >> b_shift) & 0xFF
+            buf[i+3] = (color >> a_shift) & 0xFF if a_mask else 0xFF
+        return bytes(buf)
+
+    @staticmethod
+    def _decode565(bits:int) -> tuple[int, int, int]:
+        a = ((bits >> 11) & 0x1F) << 3
+        b = ((bits >> 5) & 0x3F) << 2
+        c = (bits & 0x1F) << 3
+        return a, b, c
+
+    # @staticmethod
+    # def _decode565(bits:int) -> tuple[int, int, int]:
+    #     r = (bits & 0x1F) << 3           # bits 4:0  = red
+    #     g = ((bits >> 5) & 0x3F) << 2   # bits 10:5 = green
+    #     b = ((bits >> 11) & 0x1F) << 3  # bits 15:11 = blue
+    #     return r, g, b
+
     @staticmethod
     def extract_dxt1(data:bytes, width:int, height:int, precomp_alpha:float = 1.0) -> bytes:
         def _clamp(val:int, v_min:int, v_max:int) -> int:
             return int(min(max((val), v_min), v_max))
-
-        def _decode565(bits:int) -> tuple[int, int, int]:
-            a = ((bits >> 11) & 0x1F) << 3
-            b = ((bits >> 5) & 0x3F) << 2
-            c = (bits & 0x1F) << 3
-            return a, b, c
 
         def _c2a(a:int, b:int) -> int:
             return (2 * a + b) // 3
@@ -175,8 +206,8 @@ class DxtExtractor:
             for x in range(0, width, 4):
                 color0, color1, bits = struct.unpack("<HHI", data.read(8))
 
-                r0, g0, b0 = _decode565(color0)
-                r1, g1, b1 = _decode565(color1)
+                r0, g0, b0 = DxtExtractor._decode565(color0)
+                r1, g1, b1 = DxtExtractor._decode565(color1)
 
                 # Decode this block into 4x4 pixels
                 for j in range(4):
@@ -207,11 +238,6 @@ class DxtExtractor:
     @staticmethod
     def extract_dxt3(data: bytes, width: int, height: int) -> bytes:
         """DXT3 (BC2): explicit 4-bit alpha + DXT1-style 4-color block."""
-        def _decode565(bits: int) -> tuple[int, int, int]:
-            r = ((bits >> 11) & 0x1F) << 3
-            g = ((bits >> 5)  & 0x3F) << 2
-            b = (bits & 0x1F) << 3
-            return r, g, b
 
         buffer = bytearray(4 * width * height)
 
@@ -222,8 +248,8 @@ class DxtExtractor:
                 # 8 bytes color block (always 4-color mode in DXT3)
                 color0, color1, cbits = struct.unpack("<HHI", data.read(8))
 
-                r0, g0, b0 = _decode565(color0)
-                r1, g1, b1 = _decode565(color1)
+                r0, g0, b0 = DxtExtractor._decode565(color0)
+                r1, g1, b1 = DxtExtractor._decode565(color1)
 
                 for j in range(4):
                     for i in range(4):
@@ -254,11 +280,6 @@ class DxtExtractor:
     @staticmethod
     def extract_dxt5(data: bytes, width: int, height: int) -> bytes:
         """DXT5 (BC3): interpolated 3-bit alpha indices + DXT1-style 4-color block."""
-        def _decode565(bits: int) -> tuple[int, int, int]:
-            r = ((bits >> 11) & 0x1F) << 3
-            g = ((bits >> 5)  & 0x3F) << 2
-            b = (bits & 0x1F) << 3
-            return r, g, b
 
         buffer = bytearray(4 * width * height)
 
@@ -286,8 +307,8 @@ class DxtExtractor:
                 # 8 bytes color block (always 4-color mode in DXT5)
                 color0, color1, cbits = struct.unpack("<HHI", data.read(8))
 
-                r0, g0, b0 = _decode565(color0)
-                r1, g1, b1 = _decode565(color1)
+                r0, g0, b0 = DxtExtractor._decode565(color0)
+                r1, g1, b1 = DxtExtractor._decode565(color1)
 
                 for j in range(4):
                     for i in range(4):
