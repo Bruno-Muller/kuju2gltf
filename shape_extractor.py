@@ -13,7 +13,7 @@ import pliskin.gltf
 from pliskin.gltf import GltfHelper
 from pliskin.logger import Logger
 from pliskin.Vec3f import Vec3f, Mat3x3f, Transformation, Quaternion
-from ace_extractor import AceExtractor
+from texture_extractor import TextureExtractor
 
 from io import BytesIO
 
@@ -63,7 +63,7 @@ class ShapeExtractor:
         # EXTRACT IMAGES & TEXTURES
         Logger.log("EXTRACT IMAGES & TEXTURES")
         assert os.path.exists(self._output_dir), f"Path {self._output_dir} does not exist."
-        ace_extractor = AceExtractor(self._output_dir)
+        ace_extractor = TextureExtractor(self._output_dir)
         for image in self._shape.images:
             texture_filename = os.path.join(self._current_dir, image)
             

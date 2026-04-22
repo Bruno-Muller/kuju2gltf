@@ -41,31 +41,31 @@ If your shape is a Unicode text shape, convert it to binary first with `ffeditc_
 
 > Reference: [OpenRails documentation — 3D Shape Files](https://open-rails.readthedocs.io/en/unstable/developing.html#d-shape-files)
 
-| Feature | Support |
-|---|---|
-| `MSFT_texture_dds` extension | ✅ Supported |
-| LOD | ⚠️ Untested — LODs are generated as individual files and should be compatible |
-| `MSFT_lod` extension | ❌ Not supported |
-| `KHR_lights_punctual` extension | ❌ Not supported |
+| Feature | Support | Notes |
+|---|---|---|
+| `MSFT_texture_dds` extension | ✅ | |
+| LOD | ✅ | LODs are generated as individual files |
+| `MSFT_lod` extension | ❌ | |
+| `KHR_lights_punctual` extension | ❌ | |
 
 ## Supported Texture Formats
 
-| ACE format (in) | PNG (out) | DDS (out) | Notes |
+| ACE (in) | PNG (out) | DDS (out) | Notes |
 |---|---|---|---|
 | `Color` (ARGB 32 bits) | ✅ | ✅ | DDS no compression (32 bits with 8-bits alpha channel) |
 | `Dxt1` | ✅ | ✅ | DDS compression `DXT1` (can include 1-bit alpha mask) |
-| `Dxt3` | ❌ | ✅ | DDS compression `DXT3` |
-| `Dxt5` | ❌ | ✅ | DDS compression `DXT5` |
+| `Dxt3` | ✅ | ✅ | DDS compression `DXT3` |
+| `Dxt5` | ✅ | ✅ | DDS compression `DXT5` |
 | `Bgr565` | ❌ | ❌ | Not Implemented |
 | `Bgra5551` | ❌ | ❌ | Not Implemented |
 | `Bgra4444` | ❌ | ❌ | Not Implemented |
 
-| DDS format (in) | PNG (out) | DDS (out) | Notes |
+| DDS (in) | PNG (out) | DDS (out) | Notes |
 |---|---|---|---|
 | `Color` (ARGB 32 bits) | ✅ | ✅ | DDS no compression (32 bits with 8-bits alpha channel) |
 | `Dxt1` | ✅ | ✅ | DDS compression `DXT1` (can include 1-bit alpha mask) |
-| `Dxt3` | ❌ | ✅ | DDS compression `DXT3` |
-| `Dxt5` | ❌ | ✅ | DDS compression `DXT5` |
+| `Dxt3` | ✅ | ✅ | DDS compression `DXT3` |
+| `Dxt5` | ✅ | ✅ | DDS compression `DXT5` |
 | `Bgr565` | ❌ | ✅ | |
 | `Bgra5551` | ❌ | ✅ | |
 | `Bgra4444` | ❌ | ✅ | |

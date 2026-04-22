@@ -124,7 +124,13 @@ class DdsExtractor:
         DDPF_FOURCC = 0x00000004
         if pf_flags & DDPF_FOURCC:
             if pf_four_cc == b"DXT1":
-                buffer = Dxt1Extractor.extract_dxt1(BytesIO(pixel_data), width, height)
+                buffer = DxtExtractor.extract_dxt1(BytesIO(pixel_data), width, height)
+                return Image.frombuffer("RGBA", (width, height), buffer)
+            elif pf_four_cc == b"DXT3":
+                buffer = DxtExtractor.extract_dxt3(BytesIO(pixel_data), width, height)
+                return Image.frombuffer("RGBA", (width, height), buffer)
+            elif pf_four_cc == b"DXT5":
+                buffer = DxtExtractor.extract_dxt5(BytesIO(pixel_data), width, height)
                 return Image.frombuffer("RGBA", (width, height), buffer)
             else:
                 raise NotImplementedError(f"DDS FourCC {pf_four_cc!r} not supported for PNG conversion")
@@ -141,7 +147,7 @@ class DdsExtractor:
             return Image.frombuffer("RGBA", (width, height), bytes(buf))
 
 
-class Dxt1Extractor:
+class DxtExtractor:
     @staticmethod
     def extract_dxt1(data:bytes, width:int, height:int, precomp_alpha:float = 1.0) -> bytes:
         def _clamp(val:int, v_min:int, v_max:int) -> int:
@@ -192,6 +198,116 @@ class Dxt1Extractor:
                                 r, g, b, a = _c3(r0, r1), _c3(g0, g1), _c3(b0, b1), alpha
                             else:
                                 r, g, b, a = 0, 0, 0, 0
+
+                        idx = 4 * ((y + j) * width + x + i)
+                        buffer[idx : idx + 4] = struct.pack("4B", r, g, b, a)
+
+        return bytes(buffer)
+
+    @staticmethod
+    def extract_dxt3(data: bytes, width: int, height: int) -> bytes:
+        """DXT3 (BC2): explicit 4-bit alpha + DXT1-style 4-color block."""
+        def _decode565(bits: int) -> tuple[int, int, int]:
+            r = ((bits >> 11) & 0x1F) << 3
+            g = ((bits >> 5)  & 0x3F) << 2
+            b = (bits & 0x1F) << 3
+            return r, g, b
+
+        buffer = bytearray(4 * width * height)
+
+        for y in range(0, height, 4):
+            for x in range(0, width, 4):
+                # 8 bytes explicit alpha: 4 bits per pixel, 2 pixels per byte
+                alpha_row = struct.unpack("<8B", data.read(8))
+                # 8 bytes color block (always 4-color mode in DXT3)
+                color0, color1, cbits = struct.unpack("<HHI", data.read(8))
+
+                r0, g0, b0 = _decode565(color0)
+                r1, g1, b1 = _decode565(color1)
+
+                for j in range(4):
+                    for i in range(4):
+                        pixel_idx = j * 4 + i
+                        nibble = (alpha_row[pixel_idx // 2] >> (4 * (pixel_idx % 2))) & 0xF
+                        a = (nibble << 4) | nibble  # expand 4-bit to 8-bit
+
+                        ctrl = cbits & 3
+                        cbits >>= 2
+                        if ctrl == 0:
+                            r, g, b = r0, g0, b0
+                        elif ctrl == 1:
+                            r, g, b = r1, g1, b1
+                        elif ctrl == 2:
+                            r = (2 * r0 + r1) // 3
+                            g = (2 * g0 + g1) // 3
+                            b = (2 * b0 + b1) // 3
+                        else:
+                            r = (r0 + 2 * r1) // 3
+                            g = (g0 + 2 * g1) // 3
+                            b = (b0 + 2 * b1) // 3
+
+                        idx = 4 * ((y + j) * width + x + i)
+                        buffer[idx : idx + 4] = struct.pack("4B", r, g, b, a)
+
+        return bytes(buffer)
+
+    @staticmethod
+    def extract_dxt5(data: bytes, width: int, height: int) -> bytes:
+        """DXT5 (BC3): interpolated 3-bit alpha indices + DXT1-style 4-color block."""
+        def _decode565(bits: int) -> tuple[int, int, int]:
+            r = ((bits >> 11) & 0x1F) << 3
+            g = ((bits >> 5)  & 0x3F) << 2
+            b = (bits & 0x1F) << 3
+            return r, g, b
+
+        buffer = bytearray(4 * width * height)
+
+        for y in range(0, height, 4):
+            for x in range(0, width, 4):
+                # 2 bytes: reference alpha values
+                alpha0, alpha1 = struct.unpack("<BB", data.read(2))
+                # 6 bytes: 16 x 3-bit alpha indices packed little-endian
+                idx_bytes = struct.unpack("<6B", data.read(6))
+                abits = 0
+                for k, byte in enumerate(idx_bytes):
+                    abits |= byte << (8 * k)
+
+                # Build 8-entry alpha palette
+                if alpha0 > alpha1:
+                    alphas = [alpha0, alpha1]
+                    for k in range(1, 7):
+                        alphas.append(((7 - k) * alpha0 + k * alpha1) // 7)
+                else:
+                    alphas = [alpha0, alpha1]
+                    for k in range(1, 5):
+                        alphas.append(((5 - k) * alpha0 + k * alpha1) // 5)
+                    alphas += [0, 255]
+
+                # 8 bytes color block (always 4-color mode in DXT5)
+                color0, color1, cbits = struct.unpack("<HHI", data.read(8))
+
+                r0, g0, b0 = _decode565(color0)
+                r1, g1, b1 = _decode565(color1)
+
+                for j in range(4):
+                    for i in range(4):
+                        a = alphas[abits & 7]
+                        abits >>= 3
+
+                        ctrl = cbits & 3
+                        cbits >>= 2
+                        if ctrl == 0:
+                            r, g, b = r0, g0, b0
+                        elif ctrl == 1:
+                            r, g, b = r1, g1, b1
+                        elif ctrl == 2:
+                            r = (2 * r0 + r1) // 3
+                            g = (2 * g0 + g1) // 3
+                            b = (2 * b0 + b1) // 3
+                        else:
+                            r = (r0 + 2 * r1) // 3
+                            g = (g0 + 2 * g1) // 3
+                            b = (b0 + 2 * b1) // 3
 
                         idx = 4 * ((y + j) * width + x + i)
                         buffer[idx : idx + 4] = struct.pack("4B", r, g, b, a)
