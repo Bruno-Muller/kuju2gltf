@@ -66,9 +66,6 @@ If your shape is a Unicode text shape, convert it to binary first with `ffeditc_
 | `Dxt1` | ✅ | ✅ | DDS compression `DXT1` (can include 1-bit alpha mask) |
 | `Dxt3` | ✅ | ✅ | DDS compression `DXT3` |
 | `Dxt5` | ✅ | ✅ | DDS compression `DXT5` |
-| `Bgr565` | ❌ | ✅ | |
-| `Bgra5551` | ❌ | ✅ | |
-| `Bgra4444` | ❌ | ✅ | |
 
 Note: PNG files are in 32-bit RGBA format (8 bits per channel, including alpha).
 
