@@ -284,6 +284,13 @@ class ShapeExtractor:
         Logger.log(f"POST PROCESS OPEN RAILS")
 
         Logger.log("TAG ANIMATION")
+        animation_tags = ["bogie", "wheel"]
+        for node in self._gltf_helper.get_dict()['nodes']:
+            for tag in animation_tags:
+                if node['name'].lower().startswith(tag):
+                    Logger.log(f"TAG ANIMATION {node['name']}")
+                    node['extras'] = { "OPENRAILS_animation_name": node['name'] }
+                    break
 
         Logger.log("REKEY ANIMATION")
         self._rekey_animation(bw)
