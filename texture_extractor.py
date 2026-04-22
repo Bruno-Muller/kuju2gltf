@@ -60,7 +60,11 @@ class TextureExtractor:
     def save_png(self, source_filename : str, overwrite:bool = False) -> None:
         file_name = os.path.basename(source_filename)
         png_filename = os.path.join(self._output_dir, file_name)[:-4] + ".png"
-            
+
+        if not os.path.exists(source_filename):
+            Logger.log(f"source file does not exist, \"{source_filename}\"")
+            return
+
         if not overwrite and os.path.exists(png_filename):
             Logger.log(f"skip existing extracted file, \"{source_filename}\" → \"{png_filename}\"")
             return
@@ -71,7 +75,7 @@ class TextureExtractor:
             im = DdsExtractor.dds_to_image(source_filename)
             im.save(png_filename)
             
-        elif source_filename.lower().endswith(".png"):
+        elif source_filename.lower().endswith(".ace"):
             texture = AceFile.Texture2DFromFile(source_filename)
             #print(f"{image} mipMap:{len(texture.levels)} surfaceFormat:{texture.surfaceFormat}")
             im = TextureExtractor._texture_to_image(texture)
@@ -82,6 +86,10 @@ class TextureExtractor:
     def save_dds(self, source_filename : str, overwrite:bool = False) -> None:
         file_name = os.path.basename(source_filename)
         dds_filename = os.path.join(self._output_dir, file_name)[:-4] + ".dds"
+
+        if not os.path.exists(source_filename):
+            Logger.log(f"source file does not exist, \"{source_filename}\"")
+            return
             
         if not overwrite and os.path.exists(dds_filename):
             Logger.log(f"skip existing extracted file, \"{source_filename}\" → \"{dds_filename}\"")
