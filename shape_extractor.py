@@ -382,6 +382,10 @@ class ShapeExtractor:
         Q_TCBK = self._Q_TCBK
         V_TRANSF = self._V_TRANSF
 
+        if not hasattr(shape, 'animations') or not shape.animations:
+            Logger.log(f"EXTRACT ANIMATIONS skipped (no animations)")
+            return
+        
         # TODO create animation only if used by LOD
 
         key_bw = BinaryWriter(BytesIO())
