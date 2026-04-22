@@ -322,7 +322,7 @@ class ShapeExtractor:
                 self._gltf_helper.create_texture({"sampler":texture.filter_mode, "source":png_map[texture.i_image]})
             
         for filter in self._shape.texture_filter_names:
-            assert filter == "MipLinear", f"filter {filter} is not MipLinear."
+            assert filter in ["Linear", "MipLinear"], f"filter {filter} is not Linear or MipLinear."
             self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
 
     def _save_gltfs_and_buffers_for_3dts(self) -> None:
