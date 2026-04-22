@@ -3,11 +3,11 @@
 # https://polyformproject.org/licenses/noncommercial/1.0.0
 
 from PIL import Image
-from dxt_extractor import Dxt1Extractor
+from dxt_extractor import Dxt1Extractor, DdsExtractor
 from msts.AceFile import *
 from pliskin.logger import Logger
-from pliskin.dds import build_dds_header
 import struct
+import shutil
 
 class AceExtractor:
 
@@ -58,6 +58,11 @@ class AceExtractor:
         
         Logger.log(f"extract file, \"{ace_filename}\" → \"{png_filename}\"")
 
+        if ace_filename.lower().endswith(".dds"):
+            im = DdsExtractor.dds_to_image(ace_filename)
+            im.save(png_filename)
+            return
+
         texture = AceFile.Texture2DFromFile(ace_filename)
         #print(f"{image} mipMap:{len(texture.levels)} surfaceFormat:{texture.surfaceFormat}")
         im = AceExtractor._texture_to_image(texture)
@@ -71,6 +76,11 @@ class AceExtractor:
             Logger.log(f"skip existing extracted file, \"{ace_filename}\" → \"{dds_filename}\"")
             return
         
+        if ace_filename.lower().endswith(".dds"):
+            Logger.log(f"copy file, \"{ace_filename}\" → \"{dds_filename}\"")
+            shutil.copy2(ace_filename, dds_filename)
+            return
+
         Logger.log(f"extract file, \"{ace_filename}\" → \"{dds_filename}\"")
 
         texture = AceFile.Texture2DFromFile(ace_filename)
@@ -84,7 +94,7 @@ class AceExtractor:
         else:
             level0_size = len(levels[0])
 
-        header = build_dds_header(texture, level0_size, len(levels))
+        header = DdsExtractor.build_dds_header(texture, level0_size, len(levels))
         with open(dds_filename, "wb") as f:
             f.write(header)
             for level_data in levels:
