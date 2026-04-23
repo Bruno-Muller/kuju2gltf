@@ -520,6 +520,32 @@ class ShapeExtractor:
             i_buffer = gltf_helper.create_buffer({"byteLength": -1 , "uri": os.path.basename(buffer_name)})
 
             matrix2node = dict()
+
+            # Pre-create nodes for all matrices, parents first (empty nodes, no mesh yet)
+            hierarchy = distance_level.distance_level_header.hierarchy
+
+            def _ensure_node(i_mat: int) -> int:
+                if i_mat in matrix2node:
+                    return matrix2node[i_mat]
+                i_parent = hierarchy[i_mat]
+                if i_parent != -1:
+                    _ensure_node(i_parent)
+                _matrix = shape.matrices[i_mat]
+                transf = Transformation(_matrix.ax, _matrix.ay, _matrix.az, _matrix.bx, _matrix.by, _matrix.bz, _matrix.cx, _matrix.cy, _matrix.cz, _matrix.dx, _matrix.dy, _matrix.dz)
+                quat: Quaternion = Q_TRANSF ** Quaternion.FromMatrix(transf.get_rotation())
+                transl = V_TRANSF ** transf.get_translation()
+                i_node = gltf_helper.create_node({"name": _matrix.name, "translation": [transl.x, transl.y, transl.z], "rotation": [quat.x, quat.y, quat.z, quat.w]})
+                matrix2node[i_mat] = i_node
+                matrix2nodes[i_mat].append(i_node)
+                return i_node
+
+            # Create nodes only for matrices used in this LOD, plus their ancestors
+            for sub_object in distance_level.sub_objects:
+                for primitive in sub_object.primitives:
+                    prim_state = shape.prim_states[primitive.prim_state_idx]
+                    vtx_state = shape.vtx_states[prim_state.i_vtx_state]
+                    _ensure_node(vtx_state.i_matrix)
+
             for i_sub_object, sub_object in enumerate(distance_level.sub_objects):
                 Logger.log(f"EXTRACT MESH LOD{dlevel}_SUBOBJECT{i_sub_object}")
 
@@ -626,29 +652,11 @@ class ShapeExtractor:
 
                     Logger.log(f"EXTRACT MESH LOD{dlevel}_SUBOBJECT{i_sub_object}_PRIMITIVE{i_primitive} state_name:{prim_state.name} tex_idxs:{prim_state.tex_idxs} i_shader:{prim_state.i_shader} i_vtx_state:{prim_state.i_vtx_state} matrix.name:{matrix.name}")
 
-                    if not vtx_state.i_matrix in matrix2node:
-                        i_mesh = gltf_helper.create_mesh({"primitives" :[]})
-                        #matrix2node[vtx_state.i_matrix] = gltf_helper.create_node({"name": matrix.name, "mesh": i_mesh, "matrix": [matrix.ax, matrix.ay, matrix.az, 0.0, matrix.bx, matrix.by, matrix.bz, 0.0, matrix.cx, matrix.cy, matrix.cz, 0.0, matrix.dx, matrix.dy, -matrix.dz, 1.0]})
-                        # TODO convert to TRS if targeted by animation
+                    i_node = matrix2node[vtx_state.i_matrix]
+                    node = gltf_helper.get_node(i_node)
+                    if "mesh" not in node:
+                        node["mesh"] = gltf_helper.create_mesh({"primitives": []})
 
-                        transf = Transformation(matrix.ax, matrix.ay, matrix.az, matrix.bx, matrix.by, matrix.bz, matrix.cx, matrix.cy, matrix.cz, matrix.dx, matrix.dy, matrix.dz)
-                        mat = transf.get_rotation()#.transpose()
-                        quat:Quaternion = Q_TRANSF ** Quaternion.FromMatrix(mat)
-                        qx = quat.x
-                        qy = quat.y
-                        qz = quat.z
-                        qw = quat.w
-
-                        transl = V_TRANSF ** transf.get_translation()
-                        tx = transl.x
-                        ty = transl.y
-                        tz = transl.z
-
-                        i_node = gltf_helper.create_node({"name": matrix.name, "mesh": i_mesh, "translation": [tx, ty, tz], "rotation": [qx, qy, qz, qw]})
-                        matrix2node[vtx_state.i_matrix] = i_node
-                        matrix2nodes[vtx_state.i_matrix].append(i_node)
-
-                    
                     alphaMode = ShapeExtractor._get_alphaMode(shader)
                     i_material, material = self._find_material(prim_state.name, prim_state.tex_idxs[0], alphaMode)
                     if i_material != -1:
@@ -665,9 +673,6 @@ class ShapeExtractor:
                             },
                             "alphaMode": alphaMode
                         })
-
-                    i_node = matrix2node[vtx_state.i_matrix]
-                    node = gltf_helper.get_node(i_node)
 
                     i_mesh = node["mesh"]
                     primitives = gltf_helper.get_mesh(i_mesh)["primitives"]
