@@ -9,18 +9,38 @@ Support for exporting to **OpenRails** (`.gltf` with `MSFT_texture_dds` extensio
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).  
 Free to use, modify, and distribute for non-commercial purposes only.
 
-## Examples
+## How to use
 
-> kuju2gltf is a **command-line tool** (CLI).
+### Graphical interface (GUI)
 
-### OpenRails
+Launch `kuju2gltf` without arguments to open the graphical interface.
+
+- **Drag & drop** one or more source files onto the input box, or click **Browse…** to select them.
+- **Drag & drop** the output folder onto the output field, or click **Browse…** to pick a directory.
+- Click **Convert**.
+
+Supported conversions from the GUI:
+
+| Source | Output |
+|---|---|
+| `.s` (MSTS shape) | `.gltf` |
+| `.ace` (MSTS texture) | `.png` + `.dds` |
+| `.dds` | `.png` |
+
+Multiple source files can be queued at once — they are converted sequentially.
+
+### Command-line (CLI)
+
+> Add `-nogui` to bypass the graphical interface.
+
+#### OpenRails
 ```bash
-kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format orts
+kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format orts -nogui
 ```
 
-### 3D Train Studio
+#### 3D Train Studio
 ```bash
-kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format 3dts
+kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format 3dts -nogui
 ```
 
 ## Important note
