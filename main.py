@@ -4,6 +4,7 @@
 
 import argparse
 from shape_extractor import ShapeExtractor
+import main_window
 
 if __name__ == '__main__':
     
@@ -22,15 +23,23 @@ if __name__ == '__main__':
         epilog="It's-a-me, Mario! https://github.com/Bruno-Muller/kuju2gltf"
     )
     
-    parser.add_argument('input_file', help="Input, Kuju Shape file (.s)") 
-    parser.add_argument('output_dir', help="Output, directory")
+    parser.add_argument('input_file', nargs='?', default='', help="Input, Kuju Shape file (.s)")
+    parser.add_argument('output_dir', nargs='?', default='', help="Output, directory")
     parser.add_argument(
         '-format',
         choices=['3dts', 'orts'],
         required=False,
         help="Output format: '3dts' for 3D Train Studio, 'orts' for Open Rails"
     )
+    parser.add_argument(
+        '-nogui',
+        action='store_true',
+        help="Run in command-line mode (no GUI)"
+    )
     args = parser.parse_args()
-    
-    extractor = ShapeExtractor(args.input_file, args.output_dir, args.format)
-    extractor.run()
+
+    if args.nogui:
+        extractor = ShapeExtractor(args.input_file, args.output_dir, args.format)
+        extractor.run()
+    else:
+        main_window.main(input_file=args.input_file, output_dir=args.output_dir)
