@@ -669,7 +669,9 @@ class ShapeExtractor:
                                 "baseColorTexture": {
                                     "index": prim_state.tex_idxs[0],
                                     #"texCoord": 1
-                                }
+                                },
+                                "metallicFactor": 0.0,
+                                "roughnessFactor": 1.0
                             },
                             "alphaMode": alphaMode
                         })
