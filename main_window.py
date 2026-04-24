@@ -188,8 +188,11 @@ class MainWindow:
             messagebox.showwarning("Missing output", "Please select an output directory.")
             return
         if not os.path.isdir(output_dir):
-            messagebox.showerror("Directory not found", f"Output directory not found:\n{output_dir}")
-            return
+            try:
+                os.makedirs(output_dir)
+            except OSError as e:
+                messagebox.showerror("Cannot create directory", f"Failed to create output directory:\n{e}")
+                return
 
         self._set_ui_locked(True)
         self._start_loading()
