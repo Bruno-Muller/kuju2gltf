@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # User settings
-settings.json
+kuju2gltf.settings.json
 
 # Distribution / packaging
 build/

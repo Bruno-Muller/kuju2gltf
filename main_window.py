@@ -17,7 +17,7 @@ except ImportError:
 from shape_extractor import ShapeExtractor
 from texture_extractor import TextureExtractor
 
-_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
+_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kuju2gltf.settings.json")
 _SETTINGS_DEFAULT = {"input_files": [], "output_dir": ""}
 
 
