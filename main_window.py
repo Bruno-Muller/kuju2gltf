@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
 import threading
+import json
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -16,6 +17,32 @@ except ImportError:
 from shape_extractor import ShapeExtractor
 from texture_extractor import TextureExtractor
 
+_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
+_SETTINGS_DEFAULT = {"input_files": [], "output_dir": ""}
+
+
+def _load_settings() -> dict:
+    if not os.path.exists(_SETTINGS_FILE):
+        _save_settings(_SETTINGS_DEFAULT.copy())
+        return _SETTINGS_DEFAULT.copy()
+    try:
+        with open(_SETTINGS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        # Ensure all expected keys are present
+        for k, v in _SETTINGS_DEFAULT.items():
+            data.setdefault(k, v)
+        return data
+    except Exception:
+        return _SETTINGS_DEFAULT.copy()
+
+
+def _save_settings(settings: dict) -> None:
+    try:
+        with open(_SETTINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
 
 class MainWindow:
 
@@ -23,6 +50,12 @@ class MainWindow:
         self._root = root
         root.title("kuju2gltf")
         root.resizable(True, False)
+
+        self._settings = _load_settings()
+
+        # CLI args take priority over saved settings
+        preload_files = input_file or "\n".join(self._settings.get("input_files", []))
+        preload_dir   = output_dir  or self._settings.get("output_dir", "")
 
         pad = {"padx": 6, "pady": 4}
 
@@ -42,8 +75,8 @@ class MainWindow:
         entry_in.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         yscroll.config(command=entry_in.yview)
 
-        if input_file:
-            entry_in.insert("1.0", input_file)
+        if preload_files:
+            entry_in.insert("1.0", preload_files)
 
         if _DND_AVAILABLE:
             entry_in.drop_target_register(DND_FILES)
@@ -57,7 +90,7 @@ class MainWindow:
 
         tk.Label(frame_out, text="Output dir:", width=12, anchor="w").pack(side=tk.LEFT)
 
-        self._output_var = tk.StringVar(value=output_dir)
+        self._output_var = tk.StringVar(value=preload_dir)
         entry_out = tk.Entry(frame_out, textvariable=self._output_var)
         entry_out.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
 
@@ -196,6 +229,10 @@ class MainWindow:
 
         self._set_ui_locked(True)
         self._start_loading()
+
+        self._settings["input_files"] = input_files
+        self._settings["output_dir"] = output_dir
+        _save_settings(self._settings)
 
         def _run():
             errors = []
