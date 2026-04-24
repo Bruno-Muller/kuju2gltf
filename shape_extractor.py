@@ -292,8 +292,8 @@ class ShapeExtractor:
                     node['extras'] = { "OPENRAILS_animation_name": node['name'] }
                     break
 
-        Logger.log("REKEY ANIMATION")
-        self._rekey_animation(bw)
+        #Logger.log("REKEY ANIMATION")
+        #self._rekey_animation(bw)
 
     def _extract_lod_textures(self) -> None: 
         png_map = dict()
