@@ -1,0 +1,30 @@
+name: _Build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install pyinstaller Pillow tkinterdnd2
+
+      - name: Build executable
+        run: pyinstaller kuju2gltf.spec
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuju2gltf-exe
+          path: dist/kuju2gltf.exe
+          retention-days: 1

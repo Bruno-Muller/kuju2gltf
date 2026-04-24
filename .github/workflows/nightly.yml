@@ -10,24 +10,20 @@ on:
 
 jobs:
   build:
+    uses: ./.github/workflows/build.yml
+
+  publish:
+    needs: build
     runs-on: windows-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Download executable
+        uses: actions/download-artifact@v4
         with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: pip install pyinstaller Pillow
-
-      - name: Build executable
-        run: pyinstaller kuju2gltf.spec
+          name: kuju2gltf-exe
+          path: dist/
 
       - name: Upload nightly artifact
         uses: actions/upload-artifact@v4

@@ -1,12 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+try:
+    import tkinterdnd2 as _dnd
+    import os as _os
+    _dnd_datas = [(_os.path.dirname(_dnd.__file__), 'tkinterdnd2')]
+    _dnd_hidden = ['tkinterdnd2']
+except ImportError:
+    _dnd_datas = []
+    _dnd_hidden = []
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=['PIL'],
+    datas=_dnd_datas,
+    hiddenimports=['PIL'] + _dnd_hidden,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
