@@ -5,6 +5,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
+import sys
 import threading
 import json
 
@@ -17,11 +18,12 @@ except ImportError:
 from shape_extractor import ShapeExtractor
 from texture_extractor import TextureExtractor
 
-_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kuju2gltf.settings.json")
+_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__)), "kuju2gltf.settings.json")
 _SETTINGS_DEFAULT = {"input_files": [], "output_dir": ""}
 
 
 def _load_settings() -> dict:
+    print(_SETTINGS_FILE)
     if not os.path.exists(_SETTINGS_FILE):
         _save_settings(_SETTINGS_DEFAULT.copy())
         return _SETTINGS_DEFAULT.copy()
