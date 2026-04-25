@@ -84,11 +84,11 @@ class MainWindow:
 
         tk.Button(frame_in, text="Browse…", command=self._browse_input).pack(side=tk.LEFT)
 
-        # --- Output directory row ---
+        # --- Export directory row ---
         frame_out = tk.Frame(root)
         frame_out.pack(fill=tk.X, **pad)
 
-        tk.Label(frame_out, text="Output dir:", width=12, anchor="w").pack(side=tk.LEFT)
+        tk.Label(frame_out, text="Export dir:", width=12, anchor="w").pack(side=tk.LEFT)
 
         self._output_var = tk.StringVar(value=preload_dir)
         entry_out = tk.Entry(frame_out, textvariable=self._output_var)
@@ -176,7 +176,7 @@ class MainWindow:
             self._entry_in.insert("1.0", "\n".join(paths))
 
     def _browse_output(self):
-        path = filedialog.askdirectory(title="Select output directory")
+        path = filedialog.askdirectory(title="Select export directory")
         if path:
             self._output_var.set(path)
 
@@ -218,13 +218,13 @@ class MainWindow:
             messagebox.showerror("File not found", "File(s) not found:\n" + "\n".join(missing))
             return
         if not output_dir:
-            messagebox.showwarning("Missing output", "Please select an output directory.")
+            messagebox.showwarning("Missing export dir", "Please select an export directory.")
             return
         if not os.path.isdir(output_dir):
             try:
                 os.makedirs(output_dir)
             except OSError as e:
-                messagebox.showerror("Cannot create directory", f"Failed to create output directory:\n{e}")
+                messagebox.showerror("Cannot create directory", f"Failed to create export directory:\n{e}")
                 return
 
         self._set_ui_locked(True)
