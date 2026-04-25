@@ -85,6 +85,11 @@ class Mat3x3f:
     
     def get_trace(self) -> float:
         return self.ax + self.by + self.cz
+
+    def determinant(self) -> float:
+        return (self.ax * (self.by * self.cz - self.cy * self.bz)
+              - self.bx * (self.ay * self.cz - self.cy * self.az)
+              + self.cx * (self.ay * self.bz - self.by * self.az))
     
 class Transformation:
     def __init__(self, ax:float, ay:float, az:float, bx:float, by:float, bz:float, cx:float, cy:float, cz:float, dx:float, dy:float, dz:float) -> Self:
