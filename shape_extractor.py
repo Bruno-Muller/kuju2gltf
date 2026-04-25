@@ -42,6 +42,8 @@ class ShapeExtractor:
         self._Q_TRANSF:Quaternion = Quaternion(1,1,-1,-1) if self._reflect_z else Quaternion(1,1,1,1)
         self._Q_TCBK:Quaternion = Quaternion(1,1,-1,1) if self._reflect_z else Quaternion(1,1,1,1)
 
+        self._image2alphabits = dict()
+
     def run(self) -> None:
         self._load_shape()
         if not os.path.exists(self._output_dir): os.makedirs(self._output_dir)
@@ -64,13 +66,17 @@ class ShapeExtractor:
         Logger.log("EXTRACT IMAGES & TEXTURES")
         assert os.path.exists(self._output_dir), f"Path {self._output_dir} does not exist."
         ace_extractor = TextureExtractor(self._output_dir)
-        for image in self._shape.images:
+        for i_image,image in enumerate(self._shape.images):
             texture_filename = os.path.join(self._current_dir, image)
             
-            ace_extractor.save_png(texture_filename)
+            alphabits = ace_extractor.save_png(texture_filename)
+            assert alphabits != -1, f"Failed to extract texture {texture_filename}."
+
+            self._image2alphabits[i_image] = alphabits
             if (self._use_dds):
                 ace_extractor.save_dds(texture_filename) 
-            
+
+            Logger.log(f"image2alphabits {i_image} → {image} → alpha {alphabits} bits")
 
     def print_stats(self) -> None:
         gltf = self._gltf_helper.get_dict()
@@ -104,13 +110,26 @@ class ShapeExtractor:
         print(f"animations.channels:{j}")
         print(f"animations.samplers:{k}")
 
-    def _get_alphaMode(shader:str) -> str:
-        if shader == 'TexDiff':
-            return "OPAQUE"
-        elif shader == 'BlendATexDiff':
-            return "BLEND" # MASK ?
+    def _get_alphaMode(shader:str, alpha_test_mode:int, ace_alpha_bits:int) -> str:
         
-        raise Exception(f"Shader {shader} not implemented.")
+        alpha_test_requested = alpha_test_mode == 1; # the artist requested alpha testing for this material
+
+        # Tex, TexDiff → opaque shader, no blend
+        # BlendATex, BlendATexDiff, AddATex, AddATexDiff → blend capable shader
+        alpha_blend_requested = shader in["BlendATex", "BlendATexDiff", "AddATex", "AddATexDiff"] # the artist specified a blend capable shader
+          
+        if (alpha_blend_requested # the material is using a blend capable shader 
+            and (ace_alpha_bits > 1 # and the original ace has more than 1 bit of alpha
+                 or (ace_alpha_bits == 1 and  not alpha_test_requested))): #  or its just 1 bit, but with no alphatesting, we must blend it anyway
+            return "MASK"
+        else:
+            return "OPAQUE"                               
+                                                 
+        # To summarize, assuming we are using a blend capable shader ..
+        #     0 bits of alpha - never blend
+        #     1 bit of alpha - only blend if the alpha test wasn't requested
+        #     >1 bit of alpha - always blend
+
 
     def _save_gltf(self) -> None:
         with open(self._gltf_helper._file_name, 'w', encoding='utf-8') as f:
@@ -647,6 +666,9 @@ class ShapeExtractor:
                     vtx_state = shape.vtx_states[prim_state.i_vtx_state]
                     matrix = shape.matrices[vtx_state.i_matrix]
                     shader = shape.shader_names[prim_state.i_shader]
+                    alpha_test_mode = prim_state.alpha_test_mode
+                    texture = shape.textures[prim_state.get_i_texture()]
+                    alphabits = self._image2alphabits[texture.i_image] 
 
                     assert shader in ['TexDiff', 'BlendATexDiff'], f"prim_state.i_shader {prim_state.i_shader} is not TexDiff or BlendATexDiff."
 
@@ -657,7 +679,7 @@ class ShapeExtractor:
                     if "mesh" not in node:
                         node["mesh"] = gltf_helper.create_mesh({"primitives": []})
 
-                    alphaMode = ShapeExtractor._get_alphaMode(shader)
+                    alphaMode = ShapeExtractor._get_alphaMode(shader, alpha_test_mode, alphabits)
                     i_material, material = self._find_material(prim_state.name, prim_state.tex_idxs[0], alphaMode)
                     if i_material != -1:
                         assert material['alphaMode'] == alphaMode, f"material.alphaMode {material['alphaMode']} is not {alphaMode}."

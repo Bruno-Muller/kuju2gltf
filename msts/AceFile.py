@@ -60,6 +60,7 @@ class Texture2D:
         self.hasMipMap = hasMipMap
         self.surfaceFormat = surfaceFormat
         self.levels = dict()
+        self.Tag = None
         print(f"Texture2D.__init__: {width}x{height} mipMap:{hasMipMap} surfaceFormat:{surfaceFormat}")
 
     def set_data(self, level: int, rectangle, data: bytes, startIndex: int, elementCount: int):
