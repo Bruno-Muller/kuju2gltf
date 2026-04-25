@@ -63,7 +63,7 @@ class MainWindow:
         frame_in = tk.Frame(root)
         frame_in.pack(fill=tk.X, **pad)
 
-        tk.Label(frame_in, text="Input file:", width=12, anchor="w").pack(side=tk.LEFT)
+        tk.Label(frame_in, text="Input file:\n(.s .ace .dds)", width=12, justify="left",anchor="w").pack(side=tk.LEFT)
 
         text_frame = tk.Frame(frame_in)
         text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 4))
@@ -121,6 +121,27 @@ class MainWindow:
         self._loading_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
         self._loading_idx = 0
 
+        # Auto-save on field changes
+        self._entry_in.edit_modified(False)
+        self._entry_in.bind("<<Modified>>", self._on_entry_in_modified)
+        self._output_var.trace_add("write", lambda *_: self._autosave())
+
+    # ------------------------------------------------------------------
+    # Auto-save
+    # ------------------------------------------------------------------
+
+    def _on_entry_in_modified(self, event=None):
+        if self._entry_in.edit_modified():
+            self._autosave()
+            self._entry_in.edit_modified(False)
+
+    def _autosave(self):
+        content = self._entry_in.get("1.0", "end-1c").strip()
+        input_files = [f.strip() for f in content.splitlines() if f.strip()]
+        self._settings["input_files"] = input_files
+        self._settings["output_dir"] = self._output_var.get().strip()
+        _save_settings(self._settings)
+
     # ------------------------------------------------------------------
     # Drag & drop helpers
     # ------------------------------------------------------------------
@@ -169,7 +190,7 @@ class MainWindow:
     def _browse_input(self):
         paths = filedialog.askopenfilenames(
             title="Select input file(s)",
-            filetypes=[("Shape / ACE files", "*.s *.ace *.dds"), ("All files", "*.*")],
+            filetypes=[("Shape/Texture files", "*.s *.ace *.dds"), ("Shape", "*.s"), ("Textures ACE", "*.ace"), ("Textures DDS", "*.dds")],
         )
         if paths:
             self._entry_in.delete("1.0", "end")
