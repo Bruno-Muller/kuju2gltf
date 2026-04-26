@@ -61,26 +61,55 @@ class ShapeExtractor:
         Logger.log(f"LOAD SHAPE \"{self._shape_file}\"")
         self._shape : Shape = Shape.FromFile(self._shape_file)
 
+    def _locate_texture(self, image:str) -> str:
+        # Walk up parent directories looking for GLOBAL/Textures/image
+        current = self._current_dir
+        while True:
+            candidate = os.path.join(current, "GLOBAL", "Textures", image)
+            if os.path.exists(candidate):
+                return candidate
+            parent = os.path.dirname(current)
+            if parent == current:  # reached filesystem root
+                break
+            current = parent
+
+        # Check ROUTES/xxx/Textures/image pattern
+        parts = os.path.normpath(self._current_dir).split(os.sep)
+        for i, part in enumerate(parts):
+            if part.upper() == "ROUTES" and i + 1 < len(parts):
+                route_dir = os.sep.join(parts[:i + 2])
+                candidate = os.path.join(route_dir, "Textures", image)
+                if os.path.exists(candidate):
+                    return candidate
+                break
+
+        # Fallback: look in the shape's own directory
+        candidate = os.path.join(self._current_dir, image)
+        if os.path.exists(candidate):
+            return candidate 
+        
+        return None
+
     def _extract_textures(self) -> None:
         # EXTRACT IMAGES & TEXTURES
         Logger.log("EXTRACT IMAGES & TEXTURES")
         assert os.path.exists(self._output_dir), f"Path {self._output_dir} does not exist."
         texture_extractor = TextureExtractor(self._output_dir)
         for i_image,image in enumerate(self._shape.images):
-            texture_filename = os.path.join(self._current_dir, image)
+            #texture_filename = os.path.join(self._current_dir, image)
 
-            if not os.path.exists(texture_filename):
+            texture_filename = self._locate_texture(image)
+
+            if texture_filename is None or not os.path.exists(texture_filename):
                 Logger.log(f"source file does not exist, \"{texture_filename}\"")
                 continue
-
-            # TODO, check in shared texture folder
 
             ace_info = None
             if image.lower().endswith(".ace"):
                 ace_info = texture_extractor.save_ace2png(texture_filename)
                 if (self._use_dds):
                     texture_extractor.save_ace2dds(texture_filename) 
-            elif image.lower().endswith(".dss"):
+            elif image.lower().endswith(".dds"):
                 ace_info = texture_extractor.save_dds2png(texture_filename)
                 if (self._use_dds):
                     texture_extractor.copy_dds2dds(texture_filename)
