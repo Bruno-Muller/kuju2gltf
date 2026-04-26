@@ -302,14 +302,23 @@ class ShapeExtractor:
     def _refactor_animation_for_orts(self, bw:BinaryWriter) -> None:
         Logger.log(f"POST PROCESS OPEN RAILS")
 
+        def has_animation(node_name:str):
+            for anim in self._shape.animations[0].anim_nodes:
+                if anim.name == node_name:
+                    return len(anim.controllers) > 0
+            return False
+
         Logger.log("TAG ANIMATION")
         animation_tags = ["bogie", "wheel"]
         for node in self._gltf_helper.get_dict()['nodes']:
             for tag in animation_tags:
                 if node['name'].lower().startswith(tag):
-                    Logger.log(f"TAG ANIMATION {node['name']}")
-                    node['extras'] = { "OPENRAILS_animation_name": node['name'] }
-                    break
+                    if has_animation(node['name']):
+                        Logger.log(f"SKIP TAG ANIMATION {node['name']}")
+                    else:
+                        Logger.log(f"ADD TAG ANIMATION {node['name']}")
+                        node['extras'] = { "OPENRAILS_animation_name": node['name'] }
+                        break
 
         #Logger.log("REKEY ANIMATION")
         #self._rekey_animation(bw)
