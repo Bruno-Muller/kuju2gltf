@@ -72,20 +72,17 @@ If your shape is a Unicode text shape, convert it to binary first with `ffeditc_
 
 | ACE (in) | PNG (out) | DDS (out) | Notes |
 |---|---|---|---|
-| `Color` (ARGB 32 bits) | ✅ | ✅ | DDS no compression (32 bits with 8-bits alpha channel) |
-| `Dxt1` | ✅ | ✅ | DDS compression `DXT1` (can include 1-bit alpha mask) |
-| `Dxt3` | ✅ | ✅ | DDS compression `DXT3` |
-| `Dxt5` | ✅ | ✅ | DDS compression `DXT5` |
-| `Bgr565` | ❌ | ❌ | Not Implemented |
-| `Bgra5551` | ❌ | ❌ | Not Implemented |
-| `Bgra4444` | ❌ | ❌ | Not Implemented |
+| `Color` (ARGB 32 bits) | ✅ `RGBA` | ✅ `A8B8G8R8` | 32 bits with 8-bits alpha channel |
+| `Dxt1` | ✅ `RGBA` | ✅ `Dxt1` | can include 1-bit alpha mask |
+| `Dxt3` | ✅ `RGBA` | ✅ `Dxt3` | 4-bits alpha mask |
+| `Dxt5` | ✅ `RGBA` | ✅ `Dxt5` | 4-bits alpha mask |
 
 | DDS (in) | PNG (out) | DDS (out) | Notes |
 |---|---|---|---|
-| `Color` (ARGB 32 bits) | ✅ | ✅ | DDS no compression (32 bits with 8-bits alpha channel) |
-| `Dxt1` | ✅ | ✅ | DDS compression `DXT1` (can include 1-bit alpha mask) |
-| `Dxt3` | ✅ | ✅ | DDS compression `DXT3` |
-| `Dxt5` | ✅ | ✅ | DDS compression `DXT5` |
+| `A8R8G8B8` <br> `A8B8G8R8` | ✅ `RGBA` | ✅ | 32 bits with 8-bits alpha channel |
+| `Dxt1` | ✅ `RGBA` | ✅ | can include 1-bit alpha mask |
+| `Dxt3` | ✅ `RGBA` | ✅ | 4-bits alpha mask |
+| `Dxt5` | ✅ `RGBA` | ✅ | 4-bits alpha mask |
 
 Note: PNG files are in 32-bit RGBA format (8 bits per channel, including alpha).
 

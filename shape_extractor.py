@@ -65,18 +65,33 @@ class ShapeExtractor:
         # EXTRACT IMAGES & TEXTURES
         Logger.log("EXTRACT IMAGES & TEXTURES")
         assert os.path.exists(self._output_dir), f"Path {self._output_dir} does not exist."
-        ace_extractor = TextureExtractor(self._output_dir)
+        texture_extractor = TextureExtractor(self._output_dir)
         for i_image,image in enumerate(self._shape.images):
             texture_filename = os.path.join(self._current_dir, image)
+
+            if not os.path.exists(texture_filename):
+                Logger.log(f"source file does not exist, \"{texture_filename}\"")
+                continue
+
+            # TODO, check in shared texture folder
+
+            ace_info = None
+            if image.lower().endswith(".ace"):
+                ace_info = texture_extractor.save_ace2png(texture_filename)
+                if (self._use_dds):
+                    texture_extractor.save_ace2dds(texture_filename) 
+            elif image.lower().endswith(".dss"):
+                ace_info = texture_extractor.save_dds2png(texture_filename)
+                if (self._use_dds):
+                    texture_extractor.copy_dds2dds(texture_filename)
+            else:
+                raise NotImplementedError(f"Unsupported file format, \"{texture_filename}\"")
             
-            alphabits = ace_extractor.save_png(texture_filename)
-            assert alphabits != -1, f"Failed to extract texture {texture_filename}."
+            assert ace_info.alphaBits != -1, f"Failed to extract texture {texture_filename}."
 
-            self._image2alphabits[i_image] = alphabits
-            if (self._use_dds):
-                ace_extractor.save_dds(texture_filename) 
+            self._image2alphabits[i_image] = ace_info.alphaBits
 
-            Logger.log(f"image2alphabits {i_image} → {image} → alpha {alphabits} bits")
+            Logger.log(f"image2alphabits {i_image} → {image} → alpha {ace_info.alphaBits} bits")
 
     def print_stats(self) -> None:
         gltf = self._gltf_helper.get_dict()

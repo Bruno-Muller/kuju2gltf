@@ -6,10 +6,69 @@ import struct
 from io import BytesIO
 
 from PIL import Image
-from msts.AceFile import SurfaceFormat
+from msts.AceFile import SurfaceFormat, Texture2D
+from enum import IntEnum, Enum, auto
 
+class DdsFormat(Enum):
+    Unknown = auto()
+    Dxt1 = auto()
+    Dxt3 = auto()
+    Dxt5 = auto()
+    R8G8B8 = auto()
+    B8G8R8 = auto()
+    Bgra5551 = auto()
+    Bgra4444 = auto()
+    Bgr565 = auto()
+    Alpha8 = auto()
+    X8R8G8B8 = auto()
+    A8R8G8B8 = auto()
+    A8B8G8R8 = auto()
+    X8B8G8R8 = auto()
+    RGB555 = auto()
+    R32F = auto()
+    R16F = auto()
+    A32B32G32R32F = auto()
+    A16B16G16R16F = auto()
+    Q8W8V8U8 = auto()
+    CxV8U8 = auto()
+    G16R16F = auto()
+    G32R32F = auto()
+    G16R16 = auto()
+    A2B10G10R10 = auto()
+    A16B16G16R16 = auto()
 
 class DdsExtractor:
+
+    @staticmethod
+    def _get_dds_format(pf_flags:int, pf_four_cc:bytes, pf_rgb_bit_count:int,pf_r_mask:int, pf_g_mask:int, pf_b_mask:int, pf_a_mask:int) -> DdsFormat:
+        DDPF_FOURCC = 0x00000004
+        if pf_flags & DDPF_FOURCC:
+            if pf_four_cc == b"DXT1":
+                return DdsFormat.Dxt1
+            elif pf_four_cc == b"DXT3":
+                return DdsFormat.Dxt3
+            elif pf_four_cc == b"DXT5":
+                return DdsFormat.Dxt5
+            else:
+                raise NotImplementedError(f"DDS FourCC {pf_four_cc!r} not supported")
+        elif pf_flags == 0x41 and pf_rgb_bit_count == 0x20 and pf_four_cc == b"\x00\x00\x00\x00" and pf_r_mask == 0xff0000 and pf_g_mask == 0xff00 and pf_b_mask == 0xff and pf_a_mask == 0xff000000:
+            return DdsFormat.A8R8G8B8
+        elif pf_flags == 0x41 and pf_rgb_bit_count == 0x20 and pf_four_cc == b"\x00\x00\x00\x00" and pf_r_mask == 0xff and pf_g_mask == 0xff00 and pf_b_mask == 0xff0000 and pf_a_mask == 0xff000000:
+            return DdsFormat.A8B8G8R8
+
+        raise NotImplementedError("Not implemented DDS format")
+    
+    @staticmethod
+    def get_alpha_bits(dds_format: DdsFormat) -> int:
+        match dds_format:
+            case DdsFormat.Dxt1:
+                return 1
+            case DdsFormat.Dxt3 | DdsFormat.Dxt5:
+                return 4
+            case DdsFormat.A8R8G8B8 | DdsFormat.A8B8G8R8:
+                return 8
+            case _:
+                raise NotImplementedError(f"Unknown DDS format {dds_format!r}")
 
     @staticmethod
     def build_dds_header(texture, level0_size: int, mip_count: int) -> bytes:
@@ -110,7 +169,7 @@ class DdsExtractor:
         return header
 
     @staticmethod
-    def dds_to_image(dds_filename: str) -> Image.Image:
+    def dds_to_image(dds_filename: str) -> tuple[Image.Image, DdsFormat]:
         with open(dds_filename, "rb") as f:
             data = f.read()
         assert data[0:4] == b"DDS ", f"Not a DDS file: {dds_filename}"
@@ -119,29 +178,29 @@ class DdsExtractor:
         width      = struct.unpack_from("<I", data, 16)[0]
         pf_flags   = struct.unpack_from("<I", data, 80)[0]
         pf_four_cc = data[84:88]
+        pf_rgb_bit_count = struct.unpack_from("<I", data, 88)[0]
         pf_r_mask  = struct.unpack_from("<I", data, 92)[0]
         pf_g_mask  = struct.unpack_from("<I", data, 96)[0]
         pf_b_mask  = struct.unpack_from("<I", data, 100)[0]
         pf_a_mask  = struct.unpack_from("<I", data, 104)[0]
         pixel_data = data[128:]
 
-        DDPF_FOURCC = 0x00000004
-        if pf_flags & DDPF_FOURCC:
-            if pf_four_cc == b"DXT1":
+        dds_format = DdsExtractor._get_dds_format(pf_flags, pf_four_cc, pf_rgb_bit_count, pf_r_mask, pf_g_mask, pf_b_mask, pf_a_mask)
+        match dds_format:
+            case DdsFormat.Dxt1:
                 buffer = DxtExtractor.extract_dxt1(BytesIO(pixel_data), width, height)
-                return Image.frombuffer("RGBA", (width, height), buffer)
-            elif pf_four_cc == b"DXT3":
+                return Image.frombuffer("RGBA", (width, height), buffer), dds_format
+            case DdsFormat.Dxt3:
                 buffer = DxtExtractor.extract_dxt3(BytesIO(pixel_data), width, height)
-                return Image.frombuffer("RGBA", (width, height), buffer)
-            elif pf_four_cc == b"DXT5":
+                return Image.frombuffer("RGBA", (width, height), buffer), dds_format
+            case DdsFormat.Dxt5:
                 buffer = DxtExtractor.extract_dxt5(BytesIO(pixel_data), width, height)
-                return Image.frombuffer("RGBA", (width, height), buffer)
-            else:
-                raise NotImplementedError(f"DDS FourCC {pf_four_cc!r} not supported for PNG conversion")
-        else:
-            buffer = DxtExtractor.extract_uncompressed(pixel_data, width, height, pf_r_mask, pf_g_mask, pf_b_mask, pf_a_mask)
-            return Image.frombuffer("RGBA", (width, height), buffer)
-
+                return Image.frombuffer("RGBA", (width, height), buffer), dds_format
+            case DdsFormat.A8R8G8B8 | DdsFormat.A8B8G8R8:
+                buffer = DxtExtractor.extract_uncompressed(pixel_data, width, height, pf_r_mask, pf_g_mask, pf_b_mask, pf_a_mask)
+                return Image.frombuffer("RGBA", (width, height), buffer), dds_format
+            case _:
+                raise NotImplementedError(f"DDS format {dds_format!r} not supported")
 
 class DxtExtractor:
 

@@ -267,11 +267,12 @@ class MainWindow:
                         extractor.run()
                     elif ext == ".dds":
                         tex = TextureExtractor(output_dir)
-                        tex.save_png(input_file, overwrite=True)
+                        tex.save_dds2png(input_file, overwrite=True)
+                        tex.copy_dds2dds(input_file, overwrite=True)
                     elif ext == ".ace":
                         tex = TextureExtractor(output_dir)
-                        tex.save_png(input_file, overwrite=True)
-                        tex.save_dds(input_file, overwrite=True)
+                        tex.save_ace2png(input_file, overwrite=True)
+                        tex.save_ace2dds(input_file, overwrite=True)
                     else:
                         errors.append(f"{os.path.basename(input_file)}: unsupported type '{ext}'")
                 except Exception as e:
