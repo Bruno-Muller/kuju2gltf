@@ -62,16 +62,10 @@ class ShapeExtractor:
         self._shape : Shape = Shape.FromFile(self._shape_file)
 
     def _locate_texture(self, image:str) -> str:
-        # Walk up parent directories looking for GLOBAL/Textures/image
-        current = self._current_dir
-        while True:
-            candidate = os.path.join(current, "GLOBAL", "Textures", image)
-            if os.path.exists(candidate):
-                return candidate
-            parent = os.path.dirname(current)
-            if parent == current:  # reached filesystem root
-                break
-            current = parent
+        # Look in the shape's own directory
+        candidate = os.path.join(self._current_dir, image)
+        if os.path.exists(candidate):
+            return candidate 
 
         # Check ROUTES/xxx/Textures/image pattern
         parts = os.path.normpath(self._current_dir).split(os.sep)
@@ -83,11 +77,17 @@ class ShapeExtractor:
                     return candidate
                 break
 
-        # Fallback: look in the shape's own directory
-        candidate = os.path.join(self._current_dir, image)
-        if os.path.exists(candidate):
-            return candidate 
-        
+        # Walk up parent directories looking for GLOBAL/Textures/image
+        current = self._current_dir
+        while True:
+            candidate = os.path.join(current, "GLOBAL", "Textures", image)
+            if os.path.exists(candidate):
+                return candidate
+            parent = os.path.dirname(current)
+            if parent == current:  # reached filesystem root
+                break
+            current = parent
+
         return None
 
     def _extract_textures(self) -> None:
