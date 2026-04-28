@@ -260,6 +260,7 @@ class MainWindow:
         _save_settings(self._settings)
 
         def _run():
+            Logger._watch.restart()
             errors = []
             for input_file in input_files:
                 try:
@@ -278,7 +279,7 @@ class MainWindow:
                     else:
                         errors.append(f"{os.path.basename(input_file)}: unsupported type '{ext}'")
                 except Exception as e:
-                    Logger.log(traceback.format_exc())
+                    Logger.error(traceback.format_exc())
                     errors.append(f"{os.path.basename(input_file)}: {e}")
             self._root.after(0, lambda: self._on_convert_done(errors))
 

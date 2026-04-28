@@ -95,3 +95,9 @@ Note: DDS (in) to DDS (out) is a straight copy with no conversion.
 | `Linear` | `LINEAR` (9729) | `LINEAR` (9729) |
 | `MipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_NEAREST` (9985) |
 | `LinearMipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_LINEAR` (9987) |
+
+Note: if the texture is not provided/not found then the Blending mode (`OPAQUE` or `MASK`) cannot be determined during conversion and will default to `OPAQUE`.
+
+Note: About shape .s Texture definition; `mip_map_lod_bias` in .s has no equivalent in .glTF and information is lost in glTF.
+
+Note: About shape .s Primitive State definition; `z_buf_mode` and `z_bias` are ingored and information is lost in glTF.

@@ -10,3 +10,11 @@ class Logger:
     @staticmethod
     def log(text: str) -> None:
         print(f"{Logger._watch.get_elapsed():3.2f} {text}")
+
+    @staticmethod
+    def warn(text: str) -> None:
+        print(f"\033[33m{Logger._watch.get_elapsed():3.2f} {text}\033[0m")
+
+    @staticmethod
+    def error(text: str) -> None:
+        print(f"\033[31m{Logger._watch.get_elapsed():3.2f} {text}\033[0m")

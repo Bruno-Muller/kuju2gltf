@@ -117,7 +117,8 @@ class ShapeExtractor:
             texture_filename = self._locate_texture(image)
 
             if texture_filename is None or not os.path.exists(texture_filename):
-                Logger.log(f"source file does not exist, \"{texture_filename}\"")
+                Logger.warn(f"source file does not exist, \"{image}\", Blending will be set to OPAQUE for this texture.")
+                self._image2alphabits[i_image] = 0
                 continue
 
             ace_info = None
