@@ -37,6 +37,8 @@ class ShapeExtractor:
         self._use_dds = self._isOrts()
         self._use_lod = self._isOrts()
 
+        self._ALPHA_CUTOFF = round(200.0 / 255.0, 2)
+
         if format == "3dts":
             # Mirroring in the Z axis is required to convert from MSTS's left-handed coordinate system to 3D Train Studio's right-handed coordinate system, but it causes the triangles to be flipped, so we must flip them back.
             self._flip_triangles = True
@@ -177,19 +179,21 @@ class ShapeExtractor:
 
         # Tex, TexDiff → opaque shader, no blend
         # BlendATex, BlendATexDiff, AddATex, AddATexDiff → blend capable shader
-        alpha_blend_requested = shader in["BlendATex", "BlendATexDiff", "AddATex", "AddATexDiff"] # the artist specified a blend capable shader
+        alpha_blend_requested = shader in ["BlendATex", "BlendATexDiff", "AddATex", "AddATexDiff"] # the artist specified a blend capable shader
           
         if (alpha_blend_requested # the material is using a blend capable shader 
-            and (ace_alpha_bits > 1 # and the original ace has more than 1 bit of alpha
-                 or (ace_alpha_bits == 1 and  not alpha_test_requested))): #  or its just 1 bit, but with no alphatesting, we must blend it anyway
+            and  (ace_alpha_bits >= 1) and alpha_test_requested ): # and the original ace has at least one 1 bit of alpha, and alpha test was requested
             return "MASK"
+        elif (alpha_blend_requested # the material is using a blend capable shader 
+            and (ace_alpha_bits > 1 )): # and the original ace has more than 1 bit of alpha, we must blend (BLEND) it
+            return "BLEND"
         else:
-            return "OPAQUE"                               
+            return "OPAQUE"                             
                                                  
         # To summarize, assuming we are using a blend capable shader ..
-        #     0 bits of alpha - never blend
-        #     1 bit of alpha - only blend if the alpha test wasn't requested
-        #     >1 bit of alpha - always blend
+        #     0 bits of alpha - never blend (OPAQUE)
+        #     >=1 bit of alpha AND alpha test requested - only MASK
+        #     >1 bit of alpha - always blend (BLEND)
 
 
     def _save_gltf(self) -> None:
@@ -762,7 +766,7 @@ class ShapeExtractor:
                         assert material['alphaMode'] == alphaMode, f"material.alphaMode {material['alphaMode']} is not {alphaMode}."
                         assert material['pbrMetallicRoughness']['baseColorTexture']['index'] == prim_state.tex_idxs[0], f"material.pbrMetallicRoughness.baseColorTexture.index {material['pbrMetallicRoughness']['baseColorTexture']['index']} is not {prim_state.tex_idxs[0]}"
                     else:
-                        i_material = gltf_helper.create_material({
+                        _material = {
                             "name" : prim_state.name,
                             "pbrMetallicRoughness": {
                                 "baseColorTexture": {
@@ -773,7 +777,11 @@ class ShapeExtractor:
                                 "roughnessFactor": 1.0
                             },
                             "alphaMode": alphaMode
-                        })
+                        }
+
+                        if alphaMode == "MASK":
+                            _material["alphaCutoff"] = self._ALPHA_CUTOFF
+                        i_material = gltf_helper.create_material(_material)
 
                     i_mesh = node["mesh"]
                     primitives = gltf_helper.get_mesh(i_mesh)["primitives"]

@@ -12,6 +12,8 @@ from enum import IntEnum, Enum, auto
 import math
 from typing import List
 
+from pliskin.logger import Logger
+
 class AceInfo:
     alphaBits = 0
 
@@ -139,6 +141,14 @@ class AceFile:
             aceInfo.alphaBits = 8
         elif any(item.type == SimisAceChannelId.Mask for item in channels):
             aceInfo.alphaBits = 1
+
+        # if textureFormat in [SurfaceFormat.Dxt1] and aceInfo.alphaBits == 0:
+        #     Logger.warn("Dxt1 format detected with no alpha channel, enforce alphaBits to 1")
+        #     aceInfo.alphaBits = 1
+        # elif textureFormat in [SurfaceFormat.Dxt3, SurfaceFormat.Dxt5] and aceInfo.alphaBits == 0:
+        #     Logger.warn("Dxt3 or Dxt5 format detected with no alpha channel, enforce alphaBits to 8")
+        #     aceInfo.alphaBits = 8
+
         print(f"alphaBits:{aceInfo.alphaBits}")
 
         if ((options & SimisAceFormatOptions.RawData) != 0):
