@@ -7,6 +7,7 @@ from tkinter import filedialog, messagebox
 import os
 import sys
 import threading
+import traceback
 import json
 
 try:
@@ -15,6 +16,7 @@ try:
 except ImportError:
     _DND_AVAILABLE = False
 
+from pliskin.logger import Logger
 from shape_extractor import ShapeExtractor
 from texture_extractor import TextureExtractor
 
@@ -276,6 +278,7 @@ class MainWindow:
                     else:
                         errors.append(f"{os.path.basename(input_file)}: unsupported type '{ext}'")
                 except Exception as e:
+                    Logger.log(traceback.format_exc())
                     errors.append(f"{os.path.basename(input_file)}: {e}")
             self._root.after(0, lambda: self._on_convert_done(errors))
 
