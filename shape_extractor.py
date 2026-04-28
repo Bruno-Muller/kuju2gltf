@@ -19,11 +19,11 @@ from io import BytesIO
 
 class ShapeExtractor:
 
-    def __init__(self, shape_file: str, output_dir : str, format : str = "orts", reflect_z : bool = True):
+    def __init__(self, shape_file: str, output_dir : str, format : str = "orts"):
         self._shape_file = shape_file
         self._output_dir = output_dir
         self._format = format
-        self._reflect_z = reflect_z
+        
         self._current_dir = os.path.dirname(shape_file)
         self._shape_name = os.path.basename(shape_file)[:-2]
         
@@ -37,10 +37,26 @@ class ShapeExtractor:
         self._use_dds = self._isOrts()
         self._use_lod = self._isOrts()
 
-        self._M_TRANSF:Mat3x3f = Mat3x3f.diag(1,1,-1) if self._reflect_z else Mat3x3f.identity()
-        self._V_TRANSF:Vec3f = Vec3f(1,1,-1) if self._reflect_z else Vec3f(1,1,1)
-        self._Q_TRANSF:Quaternion = Quaternion(1,1,-1,-1) if self._reflect_z else Quaternion(1,1,1,1)
-        self._Q_TCBK:Quaternion = Quaternion(1,1,-1,1) if self._reflect_z else Quaternion(1,1,1,1)
+        if format == "3dts":
+            # Mirroring in the Z axis is required to convert from MSTS's left-handed coordinate system to 3D Train Studio's right-handed coordinate system, but it causes the triangles to be flipped, so we must flip them back.
+            self._flip_triangles = True
+            self._M_TRANSF:Mat3x3f = Mat3x3f.diag(1,1,-1)
+            self._V_TRANSF:Vec3f = Vec3f(1,1,-1)
+            self._Q_TRANSF:Quaternion = Quaternion(1,1,-1,-1)
+            self._Q_TCBK:Quaternion = Quaternion(1,1,-1,1)
+        elif format == "orts":
+            # Mirroring in the Z axis is required to convert from MSTS's left-handed coordinate system to Open Rails' right-handed coordinate system, but it causes the triangles to be flipped, so we must flip them back.
+            self._flip_triangles = True
+            self._M_TRANSF:Mat3x3f = Mat3x3f.diag(-1,1,1)
+            self._V_TRANSF:Vec3f = Vec3f(-1,1,1)
+            self._Q_TRANSF:Quaternion = Quaternion(1,-1,-1,-1)
+            self._Q_TCBK:Quaternion = Quaternion(-1,1,1,1)
+        else:
+            self._M_TRANSF:Mat3x3f = Mat3x3f.identity()
+            self._V_TRANSF:Vec3f = Vec3f(1,1,1)
+            self._Q_TRANSF:Quaternion = Quaternion(1,1,1,1)
+            self._Q_TCBK:Quaternion = Quaternion(1,1,1,1)
+
 
         self._image2alphabits = dict()
 
@@ -687,9 +703,8 @@ class ShapeExtractor:
                 start_pos = bw.get_size()
                 offset = 0
                 for i_primitive, primitive in enumerate(sub_object.primitives):
-                    flip = True if self._reflect_z else False
                     for vertex_idx in primitive.indexed_trilist.vertex_idxs:
-                        if not flip:
+                        if not self._flip_triangles:
                             bw.write_uint16(vertex_idx.a)
                             bw.write_uint16(vertex_idx.b)
                             bw.write_uint16(vertex_idx.c)
