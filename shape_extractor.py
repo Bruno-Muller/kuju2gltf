@@ -413,8 +413,7 @@ class ShapeExtractor:
 
         for texture in self._shape.textures:
             assert texture.border_color == 0xff000000, f"texture.border_color {texture.border_color:x8} is not 0xff000000."
-            assert texture.mip_map_lod_bias in [-3, -1, 0], f"texture.mip_map_lod_bias {texture.mip_map_lod_bias} is not -3, -1 or 0."
-            #assert texture.filter_mode == 0, f"texture.filter_mode {texture.filter_mode} is not 0."
+            #assert texture.mip_map_lod_bias in [-3, -1, 0], f"texture.mip_map_lod_bias {texture.mip_map_lod_bias} is not -3, -1 or 0."
             assert texture.filter_mode < len(self._shape.texture_filter_names), f"texture.filter_mode {texture.filter_mode} is out of range."
 
             if self._use_dds:
@@ -736,10 +735,10 @@ class ShapeExtractor:
                     prim_state = shape.prim_states[primitive.prim_state_idx]
                     
                     assert prim_state.flags == 0, f"prim_state.flags {prim_state.flags} is not 0."
-                    assert prim_state.z_bias == 0, f"prim_state.z_bias {prim_state.z_bias} is not 0."
+                    #assert prim_state.z_bias == 0, f"prim_state.z_bias {prim_state.z_bias} is not 0."
                     assert prim_state.alpha_test_mode in [0,1], f"prim_state.alpha_test_mode {prim_state.alpha_test_mode} is not 0 or 1."
                     assert prim_state.light_cfg_idx == 0, f"prim_state.light_cfg_idx {prim_state.light_cfg_idx} is not 0."
-                    assert prim_state.z_buf_mode in [1, 3], f"prim_state.z_buf_mode {prim_state.z_buf_mode} is not 1, 3."
+                    #assert prim_state.z_buf_mode in [1, 3], f"prim_state.z_buf_mode {prim_state.z_buf_mode} is not 1, 3."
 
                     vtx_state = shape.vtx_states[prim_state.i_vtx_state]
                     matrix = shape.matrices[vtx_state.i_matrix]

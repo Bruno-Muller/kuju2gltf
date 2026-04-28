@@ -90,11 +90,11 @@ Note: DDS (in) to DDS (out) is a straight copy with no conversion.
 
 ## Supported Texture Filters
 
-| Filter (in) | Sampler.magFilter (out) | Sampler.minFilter (out) |
+| Filter (in) | Sampler.minFilter (out) | Sampler.magFilter (out) |
 |---|---|---|
 | `Linear` | `LINEAR` (9729) | `LINEAR` (9729) |
-| `MipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_NEAREST` (9985) |
-| `LinearMipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_LINEAR` (9987) |
+| `MipLinear` | `LINEAR_MIPMAP_NEAREST` (9985) | `LINEAR` (9729) |
+| `LinearMipLinear` | `LINEAR_MIPMAP_LINEAR` (9987) | `LINEAR` (9729) |
 
 Note: if the texture is not provided/not found then the Blending mode (`OPAQUE` or `MASK`) cannot be determined during conversion and will default to `OPAQUE`.
 
