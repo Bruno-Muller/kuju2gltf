@@ -87,3 +87,11 @@ If your shape is a Unicode text shape, convert it to binary first with `ffeditc_
 Note: PNG files are in 32-bit RGBA format (8 bits per channel, including alpha).
 
 Note: DDS (in) to DDS (out) is a straight copy with no conversion.
+
+## Supported Texture Filters
+
+| Filter (in) | Sampler.magFilter (out) | Sampler.minFilter (out) |
+|---|---|---|
+| `Linear` | `LINEAR` (9729) | `LINEAR` (9729) |
+| `MipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_NEAREST` (9985) |
+| `LinearMipLinear` | `LINEAR` (9729) | `LINEAR_MIPMAP_LINEAR` (9987) |

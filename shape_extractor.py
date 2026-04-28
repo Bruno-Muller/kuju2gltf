@@ -399,19 +399,28 @@ class ShapeExtractor:
 
         #TODO, create images and textures only if used by LOD
 
+        for i_filter, filter in enumerate(self._shape.texture_filter_names):
+            assert filter in ["Linear", "LinearMipLinear", "MipLinear"], f"filter {filter} is not Linear, LinearMipLinear or MipLinear."
+            Logger.log(f"CREATE SAMPLER {i_filter}: {filter}")
+            match filter:
+                case "Linear":
+                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
+                case "MipLinear":
+                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR_MIPMAP_NEAREST, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
+                case "LinearMipLinear":
+                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR_MIPMAP_LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
+
         for texture in self._shape.textures:
             assert texture.border_color == 0xff000000, f"texture.border_color {texture.border_color:x8} is not 0xff000000."
-            assert texture.mip_map_lod_bias == -3 or texture.mip_map_lod_bias == 0, f"texture.mip_map_lod_bias {texture.mip_map_lod_bias} is not -3 or 0."
-            assert texture.filter_mode == 0, f"texture filter_mode {texture.filter_mode} is not 0."
-            
+            assert texture.mip_map_lod_bias in [-3, -1, 0], f"texture.mip_map_lod_bias {texture.mip_map_lod_bias} is not -3, -1 or 0."
+            #assert texture.filter_mode == 0, f"texture.filter_mode {texture.filter_mode} is not 0."
+            assert texture.filter_mode < len(self._shape.texture_filter_names), f"texture.filter_mode {texture.filter_mode} is out of range."
+
             if self._use_dds:
                 self._gltf_helper.create_texture({"sampler":texture.filter_mode, "source":png_map[texture.i_image], "extensions": { "MSFT_texture_dds": { "source": dds_map[texture.i_image] }}})
             else:
                 self._gltf_helper.create_texture({"sampler":texture.filter_mode, "source":png_map[texture.i_image]})
-            
-        for filter in self._shape.texture_filter_names:
-            assert filter in ["Linear", "MipLinear"], f"filter {filter} is not Linear or MipLinear."
-            self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
+                
 
     def _save_gltfs_and_buffers_for_3dts(self) -> None:
         # LOD recommendations with 30% poly count reduction
@@ -729,7 +738,7 @@ class ShapeExtractor:
                     assert prim_state.z_bias == 0, f"prim_state.z_bias {prim_state.z_bias} is not 0."
                     assert prim_state.alpha_test_mode in [0,1], f"prim_state.alpha_test_mode {prim_state.alpha_test_mode} is not 0 or 1."
                     assert prim_state.light_cfg_idx == 0, f"prim_state.light_cfg_idx {prim_state.light_cfg_idx} is not 0."
-                    assert prim_state.z_buf_mode == 1, f"prim_state.z_buf_mode {prim_state.z_buf_mode} is not 1."
+                    assert prim_state.z_buf_mode in [1, 3], f"prim_state.z_buf_mode {prim_state.z_buf_mode} is not 1, 3."
 
                     vtx_state = shape.vtx_states[prim_state.i_vtx_state]
                     matrix = shape.matrices[vtx_state.i_matrix]
