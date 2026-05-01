@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
+    with:
+      version: nightly-${{ github.run_number }}
 
   publish:
     needs: build

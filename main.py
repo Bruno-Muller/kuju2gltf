@@ -3,6 +3,8 @@
 # https://polyformproject.org/licenses/noncommercial/1.0.0
 
 import argparse
+
+from version import __version__
 from shape_extractor import ShapeExtractor
 import main_window
 
@@ -22,17 +24,17 @@ if __name__ == '__main__':
         description='This program converts from Kuju\'s format Shape file \".s\" and associated Texture file \".ace\" to glTF format.',
         epilog="It's-a-me, Mario! https://github.com/Bruno-Muller/kuju2gltf"
     )
-    
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('input_file', nargs='?', default='', help="Input, Kuju Shape file (.s)")
     parser.add_argument('output_dir', nargs='?', default='', help="Output, directory")
     parser.add_argument(
-        '-format',
+        '--format',
         choices=['3dts', 'orts'],
         required=False,
         help="Output format: '3dts' for 3D Train Studio, 'orts' for Open Rails"
     )
     parser.add_argument(
-        '-nogui',
+        '--nogui',
         action='store_true',
         help="Run in command-line mode (no GUI)"
     )

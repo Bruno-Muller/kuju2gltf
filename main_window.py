@@ -9,6 +9,7 @@ import sys
 import threading
 import traceback
 import json
+from version import __version__
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -52,7 +53,7 @@ class MainWindow:
 
     def __init__(self, root: tk.Tk, input_file: str = "", output_dir: str = ""):
         self._root = root
-        root.title("kuju2gltf")
+        root.title(f"kuju2gltf {__version__}")
         root.resizable(True, False)
 
         self._settings = _load_settings()

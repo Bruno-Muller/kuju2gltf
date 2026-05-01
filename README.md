@@ -35,12 +35,12 @@ Multiple source files can be queued at once — they are converted sequentially.
 
 #### OpenRails
 ```bash
-kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format orts -nogui
+kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" --format orts --nogui
 ```
 
 #### 3D Train Studio
 ```bash
-kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" -format 3dts -nogui
+kuju2gltf "C:\path\to\shape.s" "C:\path\to\outputdir" --format 3dts --nogui
 ```
 
 ## Important note
