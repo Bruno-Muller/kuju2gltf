@@ -388,6 +388,29 @@ class ShapeExtractor:
         #Logger.log("REKEY ANIMATION")
         #self._rekey_animation(bw)
 
+    @staticmethod
+    def _get_sampler_filters(texture_filter: str) -> tuple[int, int]:
+        """Maps MSTS/XNA texture filter name to (magFilter, minFilter) glTF constants."""
+        match texture_filter:
+            case "Linear":
+                return (pliskin.gltf.LINEAR, pliskin.gltf.LINEAR_MIPMAP_LINEAR)
+            case "LinearMipPoint": # (Min/Mag/Mip : Linear-Linear-Point)
+                return (pliskin.gltf.LINEAR, pliskin.gltf.LINEAR_MIPMAP_NEAREST)
+            case "MinPointMagLinearMipLinear": # (Min/Mag/Mip : Point-Linear-Linear)
+                return (pliskin.gltf.LINEAR, pliskin.gltf.NEAREST_MIPMAP_LINEAR)
+            case "MinPointMagLinearMipPoint": # (Min/Mag/Mip : Point-Linear-Point)
+                return (pliskin.gltf.LINEAR, pliskin.gltf.NEAREST_MIPMAP_NEAREST)
+            case "MinLinearMagPointMipLinear": # (Min/Mag/Mip : Linear-Point-Linear)
+                return (pliskin.gltf.NEAREST, pliskin.gltf.LINEAR_MIPMAP_LINEAR)
+            case "MinLinearMagPointMipPoint": # (Min/Mag/Mip : Linear-Point-Point)
+                return (pliskin.gltf.NEAREST, pliskin.gltf.LINEAR_MIPMAP_NEAREST)
+            case "PointMipLinear": # (Min/Mag/Mip : Point-Point-Linear)
+                return (pliskin.gltf.NEAREST, pliskin.gltf.NEAREST_MIPMAP_LINEAR)
+            case "Point": # (Min/Mag/Mip : Point-Point-Point)
+                return (pliskin.gltf.NEAREST, pliskin.gltf.NEAREST_MIPMAP_NEAREST)
+            case _: # Others (MipLinear, LinearMipLinear, etc.) are treated as Linear-Linear
+                return (pliskin.gltf.LINEAR, pliskin.gltf.LINEAR_MIPMAP_LINEAR)
+
     def _extract_lod_textures(self) -> None: 
         png_map = dict()
         dds_map = dict()
@@ -405,16 +428,11 @@ class ShapeExtractor:
         #TODO, create images and textures only if used by LOD
 
         for i_filter, filter in enumerate(self._shape.texture_filter_names):
-            assert filter in ["Linear", "LinearMipLinear", "MipLinear"], f"filter {filter} is not Linear, LinearMipLinear or MipLinear."
+            #assert filter in ["Linear", "LinearMipLinear", "MipLinear"], f"filter {filter} is not Linear, LinearMipLinear or MipLinear."
             Logger.log(f"CREATE SAMPLER {i_filter}: {filter}")
-            match filter:
-                case "Linear":
-                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
-                case "MipLinear":
-                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR_MIPMAP_NEAREST, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
-                case "LinearMipLinear":
-                    self._gltf_helper.create_sampler({"magFilter": pliskin.gltf.LINEAR, "minFilter": pliskin.gltf.LINEAR_MIPMAP_LINEAR, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
-
+            magFilter, minFilter  = ShapeExtractor._get_sampler_filters(filter)
+            self._gltf_helper.create_sampler({"magFilter": magFilter, "minFilter": minFilter, "wrapS": pliskin.gltf.REPEAT, "wrapT": pliskin.gltf.REPEAT, "name": filter})
+       
         for texture in self._shape.textures:
             assert texture.border_color == 0xff000000, f"texture.border_color {texture.border_color:x8} is not 0xff000000."
             #assert texture.mip_map_lod_bias in [-3, -1, 0], f"texture.mip_map_lod_bias {texture.mip_map_lod_bias} is not -3, -1 or 0."

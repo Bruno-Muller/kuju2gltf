@@ -90,11 +90,17 @@ Note: DDS (in) to DDS (out) is a straight copy with no conversion.
 
 ## Supported Texture Filters
 
-| Filter (in) | Sampler.minFilter (out) | Sampler.magFilter (out) |
+| Filter (in) | Sampler.magFilter (out) | Sampler.minFilter (out) |
 |---|---|---|
-| `Linear` | `LINEAR` (9729) | `LINEAR` (9729) |
-| `MipLinear` | `LINEAR_MIPMAP_NEAREST` (9985) | `LINEAR` (9729) |
-| `LinearMipLinear` | `LINEAR_MIPMAP_LINEAR` (9987) | `LINEAR` (9729) |
+| `Linear` | `LINEAR` (9729) | `LINEAR_MIPMAP_LINEAR` (9987) |
+| `LinearMipPoint` | `LINEAR` (9729) | `LINEAR_MIPMAP_NEAREST` (9985) |
+| `MinPointMagLinearMipLinear` | `LINEAR` (9729) | `NEAREST_MIPMAP_LINEAR` (9986) |
+| `MinPointMagLinearMipPoint` | `LINEAR` (9729) | `NEAREST_MIPMAP_NEAREST` (9984) |
+| `MinLinearMagPointMipLinear` | `NEAREST` (9728) | `LINEAR_MIPMAP_LINEAR` (9987) |
+| `MinLinearMagPointMipPoint` | `NEAREST` (9728) | `LINEAR_MIPMAP_NEAREST` (9985) |
+| `PointMipLinear` | `NEAREST` (9728) | `NEAREST_MIPMAP_LINEAR` (9986) |
+| `Point` | `NEAREST` (9728) | `NEAREST_MIPMAP_NEAREST` (9984) |
+| *(others: `MipLinear`, `LinearMipLinear`, ...)* | `LINEAR` (9729) | `LINEAR_MIPMAP_LINEAR` (9987) |
 
 Note: if the texture is not provided/not found then the Blending mode (`OPAQUE` or `MASK`) cannot be determined during conversion and will default to `OPAQUE`.
 
