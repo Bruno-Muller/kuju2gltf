@@ -245,7 +245,7 @@ class DxtExtractor:
     #     return r, g, b
 
     @staticmethod
-    def extract_dxt1(data:bytes, width:int, height:int, precomp_alpha:float = 1.0) -> bytes:
+    def extract_dxt1(data:bytes, width:int, height:int, n_alpha:float = 1.0) -> bytes:
         def _clamp(val:int, v_min:int, v_max:int) -> int:
             return int(min(max((val), v_min), v_max))
 
@@ -259,7 +259,7 @@ class DxtExtractor:
             return (2 * b + a) // 3
 
         buffer = bytearray(4 * width * height)
-        alpha = _clamp(precomp_alpha * 255, 0, 255)
+        alpha = _clamp(n_alpha * 255, 0, 255)
 
         for y in range(0, height, 4):
             for x in range(0, width, 4):
