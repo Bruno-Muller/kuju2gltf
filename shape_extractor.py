@@ -546,13 +546,24 @@ class ShapeExtractor:
 
                     frame_min = frame_max = controller[0].frame * 1.0# animation.frame_rate
                     for key in controller:
-                        assert isinstance(key, TcbKey) , f"Key {type(key)} is not TcbKey."
+                        if isinstance(key, TcbKey):
+                            #assert isinstance(key, TcbKey) , f"Key {type(key)} is not TcbKey."
                         
-                        quat = Q_TCBK ** Quaternion(key.x, key.y, key.z, key.w)
-                        rot_bw.write_single(quat.x)
-                        rot_bw.write_single(quat.y)
-                        rot_bw.write_single(quat.z)
-                        rot_bw.write_single(quat.w)
+                            quat = Q_TCBK ** Quaternion(key.x, key.y, key.z, key.w)
+                            rot_bw.write_single(quat.x)
+                            rot_bw.write_single(quat.y)
+                            rot_bw.write_single(quat.z)
+                            rot_bw.write_single(quat.w)
+
+                        elif isinstance(key, SlerpRot):
+                            quat = Q_TCBK ** Quaternion(key.x, key.y, key.z, key.w)
+                            rot_bw.write_single(quat.x)
+                            rot_bw.write_single(quat.y)
+                            rot_bw.write_single(quat.z)
+                            rot_bw.write_single(quat.w)
+
+                        else:
+                            assert False , f"Key {type(key)} is neither TcbKey nor SlerpRot."
 
                         frame = key.frame * 1.0# animation.frame_rate
                         frame_min = min(frame_min, frame)
